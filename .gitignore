@@ -1,0 +1,37 @@
+# Go build outputs
+*.exe
+*.dll
+*.pdb
+*.test
+*.out
+
+# Secrets and environment configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Temporary files and logs
+*.log
+*.tmp
+*.bak
+*.backup
+*.swp
+
+# Editor files
+.vscode/
+.idea/
+.DS_Store
+
+# Generated datasets and archives
+*.csv
+*.zip
+*.7z
+
+# Local Python artifacts
+__pycache__/
+.venv/
+*.pyc
