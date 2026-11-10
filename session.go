@@ -3,11 +3,16 @@ package main
 import (
 	"net"
 	"net/http"
+	"regexp"
 	"strings"
 	"sync"
 )
 
 var sessionStore sync.Map
+
+// Research-only UUID identifier, supplied by the k6 collector for exact parity.
+// The header is ignored unless research parity mode is enabled on loopback.
+var researchSessionIDRe = regexp.MustCompile(`(?i)^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
 
 type SessionState struct {
 	mu                  sync.Mutex
@@ -77,6 +82,13 @@ func getSessionState(r *http.Request) *SessionState {
 	return val.(*SessionState)
 }
 func sessionKey(r *http.Request) string {
+	// Opt-in controlled experiment only. Real clients must never be trusted to
+	// define their security session via a client-chosen header.
+	if getenv("RESEARCH_PARITY_MODE", "0") == "1" && isLoopbackPeer(r.RemoteAddr) {
+		if id := strings.TrimSpace(r.Header.Get("X-Research-Session-ID")); researchSessionIDRe.MatchString(id) {
+			return "research:" + strings.ToLower(id)
+		}
+	}
 	if auth := r.Header.Get("Authorization"); strings.TrimSpace(auth) != "" {
 		return auth
 	}
@@ -99,4 +111,16 @@ func sessionKey(r *http.Request) string {
 	}
 
 	return "anonymous"
+}
+
+// The parity header is honored only for direct local requests. Do not enable
+// this experimental mode on a public-facing service (including a local reverse
+// proxy that forwards untrusted remote clients).
+func isLoopbackPeer(remoteAddr string) bool {
+	host, _, err := net.SplitHostPort(remoteAddr)
+	if err != nil {
+		return false
+	}
+	ip := net.ParseIP(host)
+	return ip != nil && ip.IsLoopback()
 }

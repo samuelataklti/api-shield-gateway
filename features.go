@@ -36,7 +36,7 @@ type Features struct {
 func extractFeatures(r *http.Request, body []byte, state *SessionState) Features {
 	path := r.URL.Path
 	method := strings.ToUpper(r.Method)
-	template := endpointTemplate(path)
+	template := endpointTemplateForRequest(r)
 	targetID := extractTargetID(path, r.URL.RawQuery, body)
 
 	// Match the final k6 dataset collector: req_size was request-body length.
@@ -151,6 +151,30 @@ func endpointHasID(path string, targetID string) bool {
 
 	return false
 }
+
+// endpointTemplateForRequest matches the endpoint-template strings recorded in
+// the thesis k6 collectors for these three paginated GET routes.
+// The collector records the query structure, not the actual limit/offset values.
+// Do not apply this rule to other routes: their collector templates may differ.
+func endpointTemplateForRequest(r *http.Request) string {
+	template := endpointTemplate(r.URL.Path)
+	if r.Method != http.MethodGet {
+		return template
+	}
+	switch template {
+	case "/workshop/api/shop/products",
+		"/workshop/api/shop/orders/all",
+		"/community/api/v2/community/posts/recent":
+		query := r.URL.Query()
+		_, hasLimit := query["limit"]
+		_, hasOffset := query["offset"]
+		if hasLimit && hasOffset {
+			return template + "?limit={n}&offset={n}"
+		}
+	}
+	return template
+}
+
 func endpointTemplate(path string) string {
 	parts := strings.Split(strings.Trim(path, "/"), "/")
 	if len(parts) == 0 {
