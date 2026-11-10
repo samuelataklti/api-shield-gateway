@@ -78,6 +78,19 @@ The **original thesis evaluation**, on a controlled local testbed, reported:
 
 The reported ML classification metrics come from the **offline held-out test set**. A single gateway request or the built-in model-only benchmark endpoint does **not** establish end-to-end online accuracy or exhaustive Python–Go parity.
 
+### Updated Gateway + ML Performance Results (November 2026)
+
+Following additional code refinements, optimizations, and bug fixes, the Go gateway was benchmarked again under concurrent workloads. The updated implementation demonstrated higher throughput and lower latency compared with the original thesis measurements under the local test conditions.
+
+| Concurrent Users | Throughput (req/s) | Average Latency (ms) | P95 (ms) | P99 (ms) |
+|---|---:|---:|---:|---:|
+| 10 | 15,362.21 | 0.427 | 1.05 | 1.62 |
+| 50 | 15,222.54 | 2.99 | 7.67 | 10.61 |
+| 100 | 14,775.75 | 6.33 | 16.14 | 23.36 |
+| 200 | 14,884.17 | 12.69 | 31.44 | 46.80 |
+
+These results represent post-thesis performance measurements of the refined implementation and do not replace the original research findings.
+
 ## Final STRICT-12 features
 
 The feature vector is ordered exactly as expected by the exported model:
