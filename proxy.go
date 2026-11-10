@@ -86,7 +86,8 @@ func proxyToTarget(r *http.Request, body []byte) (*ProxyResponse, error) {
 func copyHeaders(dst, src http.Header) {
 	for k, values := range src {
 		lower := strings.ToLower(k)
-		if lower == "connection" ||
+		if lower == "x-research-session-id" ||
+			lower == "connection" ||
 			lower == "keep-alive" ||
 			lower == "proxy-authenticate" ||
 			lower == "proxy-authorization" ||
